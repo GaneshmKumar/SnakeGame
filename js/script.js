@@ -1,47 +1,11 @@
 var canvas = document.getElementById('canvas');
 var canvasContext = canvas.getContext('2d');
 
-var blockLength = 19, blockHeight = 19, blockGap = 20;
-var foodWidth = 19, foodHeight = 19;
-var run;
-var foodX, foodY;
-var eaten = true;
-var wallHitAdjust = 20;
+var foodX, foodY, eaten = true, direction = 'r', score = 0, gameOver = false, snakeBody = [];
 
-var direction = 'r', prev = 't';
-
-var score = 0;
-
-var snakeBody = [
-	{x: 40, y: 40},
-	{x: 60, y: 40},
-	{x: 80, y: 40},
-	{x: 100, y: 40},
-	{x: 120, y: 40},
-	{x: 140, y: 40}
-];
-
-var initialSnakeBody = snakeBody;
-
-var gameOver = false;
 window.onload = function() {
-	canvas.width = document.documentElement.clientWidth - 30;
-	canvas.height = document.documentElement.clientHeight - 30;
-	initialize();
 	window.addEventListener('keydown', handleKeyPress);
-}
-
-function initialize() {
-	//snakeBody = initialSnakeBody;
-	run = setInterval(function() {
-		drawAll();
-	}, 100);
-}
-
-function createFood() {
-	foodX = Math.floor(Math.random() * 30);
-	foodY = Math.floor(Math.random() * 30);
-	eaten = false;
+	initialize();
 }
 
 function handleKeyPress(e) {
@@ -61,13 +25,41 @@ function handleKeyPress(e) {
 	{
 		direction = 'b';
 	}
+	if(e.keyCode == 13 && gameOver == true)
+	{
+		gameOver = false;
+		score = 0;
+		createInitialSnake();
+	}
+}
+
+
+function initialize() {
+	canvas.width = document.documentElement.clientWidth - 30;
+	canvas.height = document.documentElement.clientHeight - 45;
+
+	createInitialSnake();
+	setInterval(function() {
+		drawAll();
+	}, config.speed);
+}
+
+function createInitialSnake() {
+	var x = 40, y = 40;
+	for(var i = 0; i < config.initialSnakeLength; i ++)
+	{
+		snakeBody.push({x: x, y: y});
+		x += 20;
+	}
 }
 
 function drawAll() {
-	drawRect(0, 0, canvas.width, canvas.height, '#212121');
+	drawRect(0, 0, canvas.width, canvas.height, '#1D1F20');
+	drawText("Score: " + score, (canvas.width / 2) - 30, 20, '#ffffff');
 	if(gameOver)
 	{
-		drawText('Game Over !!!', (canvas.width / 2) - 50, canvas.height / 2, '#ffffff');
+		drawText('Game Over !!!', (canvas.width / 2) - 50, canvas.height / 2 - 10, '#ffffff');
+		drawText('Press ENTER to start a new game', (canvas.width / 2) - 100, canvas.height / 2 + 10, '#ffffff');
 		return;
 	}
 	if(eaten)
@@ -75,62 +67,86 @@ function drawAll() {
 		createFood();
 	}
 	createSnake();	
-	drawRect(foodX * 20, foodY * 20, foodWidth, foodHeight, '#ff4436');
+
+	drawRect(foodX * 20, foodY * 20, config.foodWidth, config.foodHeight, '#ff4436');
 }
 
-function move() {
-	var lastBlock = snakeBody[snakeBody.length - 1];
-	if(direction == 'l')
-	{
-		snakeBody.push({x: lastBlock.x - blockGap, y: lastBlock.y});
-	}
-	if(direction == 'r')
-	{
-		snakeBody.push({x: lastBlock.x + blockGap, y: lastBlock.y});	
-	}
-	if(direction == 't')
-	{	
-		snakeBody.push({x: lastBlock.x, y: lastBlock.y - blockGap});
-	}
-	if(direction == 'b')
-	{
-		snakeBody.push({x: lastBlock.x, y: lastBlock.y + blockGap});
-	}
+function createFood() {
+	foodX = Math.floor(Math.random() * 20)
+	foodY = Math.floor(Math.random() * 20)
+	eaten = false;
 }
 
 function createSnake() {
 	snakeBody.shift();
 	move();
+	if(didEat())
+	{
+		score += 1;
+		move();
+		createFood();
+	}
+	var lastBlock = snakeBody[snakeBody.length - 1];
+	if(lastBlock.x > canvas.width - config.wallHitAdjust || lastBlock.x < 0 || lastBlock.y > canvas.height - config.wallHitAdjust || lastBlock.y < 0)
+	{
+		resetGame();
+	}
+	if(selfDestruct(lastBlock.x, lastBlock.y)) 
+	{
+		resetGame();
+	}
 	for(var i = 0; i < snakeBody.length; i ++)
 	{
-		//alert(`snakeX: ${snakeBody[i].x} snakeY: ${snakeBody[i].y} foodX: ${foodX} foodY: ${foodY}`);
 		console.log(`snakeX: ${snakeBody[i].x} snakeY: ${snakeBody[i].y} foodX: ${foodX} foodY: ${foodY}`);
-		if(snakeBody[i].x > canvas.width - wallHitAdjust || snakeBody[i].x < 20 || snakeBody[i].y > canvas.height - wallHitAdjust || snakeBody[i].y < 20)
-		{
-			resetGame();
-		}
 		if(i == snakeBody.length - 1)
 		{
-			drawRect(snakeBody[i].x, snakeBody[i].y, blockLength, blockHeight, '#19bd9b');		
+			drawRect(snakeBody[i].x, snakeBody[i].y, config.blockLength, config.blockHeight, '#19bd9b');	
 		}
 		else
 		{
-			drawRect(snakeBody[i].x, snakeBody[i].y, blockLength, blockHeight, '#ffffff');		
+			drawRect(snakeBody[i].x, snakeBody[i].y, config.blockLength, config.blockHeight, '#ffffff');		
 		}
 		
 	}
 }
 
-function drawText(text, x, y, color) {
-	canvasContext.fillStyle = color;
-	canvasContext.fillText(text, x, y);
+
+function move() {
+	var lastBlock = snakeBody[snakeBody.length - 1];
+	if(direction == 'l')
+	{
+		snakeBody.push({x: lastBlock.x - config.blockGap, y: lastBlock.y});
+	}
+	if(direction == 'r')
+	{
+		snakeBody.push({x: lastBlock.x + config.blockGap, y: lastBlock.y});	
+	}
+	if(direction == 't')
+	{	
+		snakeBody.push({x: lastBlock.x, y: lastBlock.y - config.blockGap});
+	}
+	if(direction == 'b')
+	{
+		snakeBody.push({x: lastBlock.x, y: lastBlock.y + config.blockGap});
+	}
 }
 
-function drawRect(x, y, width, height, color) {
-	canvasContext.fillStyle = color;
-	canvasContext.fillRect(x, y, width, height);
+function didEat() {
+	var lastBlock = snakeBody[snakeBody.length - 1];
+	return (lastBlock.x == foodX * 20 && lastBlock.y == foodY * 20)? true : false;
+}
+
+function selfDestruct(x, y) {
+    for(var i = 0; i < snakeBody.length - 1; i++) 
+    {
+        if(snakeBody[i].x === x && snakeBody[i].y === y)
+            return true;
+    } 
+    return false;
 }
 
 function resetGame() {
 	gameOver = true;
+	snakeBody = [];
+	direction = 'r';
 }

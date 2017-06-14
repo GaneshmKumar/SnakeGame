@@ -72,8 +72,8 @@ function drawAll() {
 }
 
 function createFood() {
-	foodX = Math.floor(Math.random() * 20)
-	foodY = Math.floor(Math.random() * 20)
+	foodX = Math.floor(Math.random() * 40)
+	foodY = Math.floor(Math.random() * 30)
 	eaten = false;
 }
 

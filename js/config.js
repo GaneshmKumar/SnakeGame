@@ -1,5 +1,5 @@
 var config = {
-	'initialSnakeLength': 13,
+	'initialSnakeLength': 3,
 	'blockLength': 19,
 	'blockHeight': 19,
 	'blockGap': 20,

@@ -1,9 +1,13 @@
 var canvas = document.getElementById('canvas');
 var canvasContext = canvas.getContext('2d');
 
+var startGame = false;
 var foodX, foodY, eaten = true, direction = 'r', score = 0, gameOver = false, snakeBody = [];
 
 window.onload = function() {
+	window.addEventListener('mousedown', function() {
+    	 startGame = true;
+  	});
 	window.addEventListener('keydown', handleKeyPress);
 	initialize();
 }
@@ -56,6 +60,12 @@ function createInitialSnake() {
 function drawAll() {
 	drawRect(0, 0, canvas.width, canvas.height, '#1D1F20');
 	drawText("Score: " + score, (canvas.width / 2) - 30, 20, '#ffffff');
+	if(!startGame)
+  	{
+    	drawText('Controls: Left ← Right → Up ↑ Down ↓ ', (canvas.width / 2) - 110, canvas.height / 2 - 10, '#ffffff');
+    	drawText('Click on the screen to start game', (canvas.width / 2) - 100, canvas.height / 2 + 10, '#ffffff');  
+    	return;
+  	}
 	if(gameOver)
 	{
 		drawText('Game Over !!!', (canvas.width / 2) - 50, canvas.height / 2 - 10, '#ffffff');
